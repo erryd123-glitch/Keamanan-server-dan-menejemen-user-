@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LMS Keamanan Server & Manajemen User</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+<style>
+:root{--bg:#f5f3ff;--card:#ffffff;--tx:#211638;--mut:#776b8e;--bd:#e6def2;--pri:#7c3aed;--side:#24103f;--ok:#15803d;--soft:#f0e8ff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0d1526;--card:#14203a;--tx:#e8eefb;--mut:#93a3bd;--bd:#223250;--soft:#1b2d52}}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--tx)}
+button,input,select,textarea{font:inherit}
+.btn{background:var(--pri);color:#fff;border:0;border-radius:8px;padding:9px 16px;cursor:pointer;font-weight:600}
+.btn.o{background:transparent;border:1px solid var(--bd);color:var(--tx)}.btn.r{background:#dc2626}.btn.s{padding:5px 10px;font-size:13px}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);margin:4px 0 10px}
+#login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#190b2f,#6d28d9);padding:16px}
+.lbox{background:var(--card);padding:28px;border-radius:16px;width:100%;max-width:380px}
+#app{display:none}
+aside{position:fixed;left:0;top:0;bottom:0;width:230px;background:var(--side);color:#cfd9ee;padding:18px 12px;padding-top:calc(18px + env(safe-area-inset-top,0px));overflow:auto;transition:.25s;z-index:20}
+aside h2{color:#fff;margin:0 8px 18px;font-size:20px}aside h2 span{color:#3b9bff}
+aside a{display:block;padding:11px 12px;border-radius:8px;cursor:pointer;margin-bottom:4px}
+aside a.on{background:var(--pri);color:#fff}aside a:hover{background:#17294d}
+main{margin-left:230px;padding:16px}
+.top{display:flex;align-items:center;gap:12px;background:var(--card);padding:10px 16px;border-radius:12px;margin-bottom:16px;justify-content:space-between}
+#mb{display:none}
+.hero{background:linear-gradient(120deg,#2e1065,#7c3aed);color:#fff;border-radius:14px;padding:28px;margin-bottom:16px}
+.hero h1{margin:0 0 8px;font-size:24px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:12px}
+.stat b{font-size:26px;display:block}.stat small{color:var(--mut)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.tag{padding:3px 10px;border-radius:99px;font-size:12px;background:var(--soft);color:var(--pri)}.tag.err{background:#fee2e2;color:#991b1b;padding:8px 10px;border-radius:8px;display:inline-block}.tag.ok{background:#dcfce7;color:var(--ok)}
+.bar{height:8px;background:var(--bd);border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--pri)}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:8px;border-bottom:1px solid var(--bd);text-align:left}
+.sc{overflow-x:auto}.mut{color:var(--mut);font-size:13px}
+.opt{display:block;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;margin:5px 0;cursor:pointer}
+.opt.k{border-color:var(--ok);background:#dcfce733}.opt.w{border-color:#dc2626;background:#dc262622}
+.cert{background:#fff;color:#14213d;border:8px double #c9a227;padding:32px 20px;text-align:center;border-radius:6px;max-width:760px;margin:auto}
+.cert h1{font-family:Georgia,serif;font-size:30px;margin:0;color:#0b3a8f}.cert h2{font-family:Georgia,serif;margin:14px 0}
+.big{font-size:54px;font-weight:700;color:#0b3a8f}.sign-area{width:240px;margin:30px 24px 0 auto;text-align:center;break-inside:avoid}.sign-area p{margin-bottom:0}.sign-line{height:54px;border-bottom:1px solid currentColor;margin:0 0 8px}.sign-name{display:block;font-size:16px}.cert{position:relative}
+@media(max-width:800px){aside{transform:translateX(-100%)}aside.open{transform:none}main{margin-left:0}#mb{display:block}}
+@media print{aside,.top,.noprint{display:none!important}main{margin:0}.sign-line{border-color:#222}}
+
+/* FINAL OVERRIDE: iPhone RED Liquid Glass theme */
+:root{color-scheme:dark;--bg:#10070c;--card:rgba(255,240,245,.075);--tx:#fff5f7;--mut:#d8bac3;--bd:rgba(255,220,230,.19);--pri:#ff375f;--side:rgba(27,7,15,.78);--ok:#72e6b0;--soft:rgba(255,55,95,.16)}
+html{background:#10070c;scroll-behavior:smooth}
+body{color:var(--tx);background:radial-gradient(ellipse at 12% 0%,rgba(255,55,95,.34),transparent 38%),radial-gradient(ellipse at 95% 18%,rgba(190,20,65,.29),transparent 34%),radial-gradient(ellipse at 48% 100%,rgba(91,8,36,.42),transparent 45%),linear-gradient(145deg,#10070c,#260b15 52%,#10070c);background-attachment:fixed}
+body:before{content:"";position:fixed;inset:-35px;pointer-events:none;z-index:-1;background:radial-gradient(circle at 18% 28%,#ff375f33,transparent 22%),radial-gradient(circle at 76% 62%,#ff789126,transparent 26%);filter:blur(30px)}
+#login{background:radial-gradient(ellipse at 10% 0%,rgba(255,55,95,.56),transparent 45%),radial-gradient(ellipse at 100% 100%,rgba(151,18,58,.46),transparent 45%),linear-gradient(145deg,#19070e,#0d070b 72%);padding:24px}
+.lbox,.card,.top,.promo,.it,.cert{background:linear-gradient(145deg,rgba(255,245,248,.14),rgba(255,245,248,.045));backdrop-filter:blur(28px) saturate(175%);-webkit-backdrop-filter:blur(28px) saturate(175%);border:1px solid rgba(255,230,236,.2);box-shadow:0 18px 48px rgba(0,0,0,.27),inset 0 1px 0 rgba(255,255,255,.16),inset 0 -1px 0 rgba(255,55,95,.09)}
+.lbox{border-radius:30px;padding:30px}.card,.top{border-radius:24px}.top{margin-top:14px;border-color:rgba(255,230,236,.16)}
+aside{background:rgba(25,7,14,.79);backdrop-filter:blur(30px) saturate(170%);-webkit-backdrop-filter:blur(30px) saturate(170%);border-right:1px solid rgba(255,230,236,.14);box-shadow:8px 0 32px rgba(0,0,0,.18)}
+aside h2 span,.brand .logo{color:#fff;background:linear-gradient(135deg,#ff7891,#ff174f 58%,#c6003d);box-shadow:0 8px 22px rgba(255,23,79,.25)}.brand .logo{border:1px solid rgba(255,255,255,.3);border-radius:15px}.brand b{color:#fff}.brand small,.lbl{color:#d7aab7}
+aside a{color:#f7dfe5;border:1px solid transparent;transition:background .2s,border-color .2s,transform .2s}aside a.on{background:linear-gradient(135deg,rgba(255,55,95,.44),rgba(255,125,149,.14));border:1px solid rgba(255,185,199,.3);box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 8px 22px rgba(255,35,83,.13);color:#fff}aside a:hover{background:rgba(255,55,95,.15)}
+.btn{background:linear-gradient(135deg,#ff718a,#ff375f 55%,#e91e4d);color:#fff;border:1px solid rgba(255,230,236,.28);border-radius:999px;padding:11px 19px;box-shadow:0 7px 20px rgba(255,35,83,.22),inset 0 1px 0 rgba(255,255,255,.24);transition:transform .16s,filter .16s}.btn:hover{filter:brightness(1.08);transform:translateY(-1px)}.btn:active{transform:scale(.98)}.btn.o{background:rgba(255,245,248,.075);border-color:rgba(255,230,236,.22);color:var(--tx);box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}.btn.r{background:linear-gradient(135deg,#ff5b70,#c8102e)}
+input,select,textarea{background:rgba(255,245,248,.075);color:var(--tx);border:1px solid rgba(255,230,236,.2);border-radius:16px;padding:12px 14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}input:focus,select:focus,textarea:focus{outline:2px solid rgba(255,55,95,.5);outline-offset:1px;border-color:#ff718a}option{background:#251018;color:#fff}
+.hero{background:linear-gradient(125deg,rgba(125,14,47,.86),rgba(255,55,95,.43));border:1px solid rgba(255,220,228,.22);backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);box-shadow:inset 0 1px 0 rgba(255,255,255,.17),0 18px 40px rgba(0,0,0,.17)}
+.tag{background:rgba(255,55,95,.16);color:#ff9db0}.tag.err{background:rgba(255,60,80,.16);color:#ffb3bf}.tag.ok{background:rgba(42,190,125,.16);color:#8ff0c2}.bar{background:rgba(255,230,236,.12)}.bar i{background:linear-gradient(90deg,#ff7891,#ff174f)}.dn{background:conic-gradient(#ff375f calc(var(--p)*1%),rgba(255,230,236,.12) 0)}.dn span{background:rgba(35,10,20,.8);color:white}
+.ic,.av{background:rgba(255,55,95,.15);border:1px solid rgba(255,180,196,.18);color:#ff9db0}.it:hover{border-color:rgba(255,100,130,.6)}.opt{background:rgba(255,245,248,.045);border-color:rgba(255,230,236,.16);border-radius:16px}.opt.sel{border-color:#ff718a;background:rgba(255,55,95,.19)}.opt.k{border-color:#78e6b1;background:rgba(120,230,177,.1)}.opt.w{border-color:#ff526d;background:rgba(255,55,95,.12)}
+.promo{border-radius:20px}.promo b{color:#ffb7c5}.promo p{color:#e0bdc7}.cert{color:var(--tx);border:2px solid rgba(255,170,117,.75);border-radius:24px;background:linear-gradient(135deg,rgba(255,245,248,.16),rgba(255,245,248,.055));padding:32px 20px}.cert h1{color:#ffd1a6}.cert h2{color:#fff4f6}.big{color:#ffd1a6}
+.pojok-hero{position:relative;overflow:hidden;padding:28px;border-radius:26px;background:linear-gradient(115deg,rgba(65,8,27,.94),rgba(155,14,54,.78) 52%,rgba(48,8,24,.93));border:1px solid rgba(255,115,147,.65);box-shadow:0 18px 45px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.22);backdrop-filter:blur(26px) saturate(165%);-webkit-backdrop-filter:blur(26px) saturate(165%)}.pojok-hero:after{content:'◈';position:absolute;right:24px;top:-32px;font-size:160px;color:#ffb7c5;opacity:.12;transform:rotate(12deg)}.pojok-hero h1{color:#fff5f7;text-shadow:0 0 24px rgba(255,55,95,.45)}.pojok-hero p{color:#f5dce3}.pojok-chip{display:inline-block;border:1px solid rgba(255,200,213,.27);border-radius:999px;padding:6px 11px;margin:4px 5px 4px 0;background:rgba(255,245,248,.09);color:#ffd7e0;backdrop-filter:blur(12px)}
+@media(max-width:800px){.lbox{padding:24px 20px;border-radius:28px}main{padding:0 12px 16px}.top{margin-top:10px;padding:11px 13px;border-radius:20px}.card{padding:14px}.btn{min-height:42px}}
+@media(prefers-reduced-transparency:reduce){.lbox,.card,.top,.promo,.it,aside,.cert,.pojok-hero{backdrop-filter:none;-webkit-backdrop-filter:none;background:#241018}}
+@media print{body{background:white;color:#111}.cert{background:white;color:#111;border:5px double #c9a227;box-shadow:none;backdrop-filter:none}.cert h1,.cert h2,.big{color:#392d18}.card{box-shadow:none}}
+
+</style><style>
+aside{background:linear-gradient(180deg,#2e1065,#190b2f);width:250px;padding:18px 14px;padding-top:calc(18px + env(safe-area-inset-top,0px));color:#e6efff}
+main{margin-left:250px;padding:0 16px 16px}
+.brand{display:flex;gap:12px;align-items:center;margin:0 4px 22px}
+.logo{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#c084fc,#7c3aed);display:grid;place-items:center;font-size:24px;color:#fff}
+.brand b{font-size:22px;color:#fff;display:block;line-height:1.1}.brand small{color:#9fb6de;font-size:11px}
+.lbl{letter-spacing:.2em;font-size:12px;color:#8ea6d0;margin:6px 8px 12px}
+aside a{display:flex;gap:16px;align-items:center;padding:13px 16px;border-radius:14px;font-size:16px;margin-bottom:6px;color:#dbe6fa}
+aside a i{font-style:normal;width:22px;text-align:center}
+aside a.on{background:linear-gradient(90deg,#2f7cf0,#1d5fd0);border:1px solid #6fa8ff88;box-shadow:0 4px 14px #1470f555;color:#fff}
+.promo{border:1px solid #ffffff25;background:#ffffff10;border-radius:16px;padding:14px;margin:18px 0}
+.promo b{color:#fff}.promo p{margin:6px 0 0;color:#b9cbea;font-size:13px}
+.top{background:var(--card);border-bottom:1px solid var(--bd);border-radius:0;margin:0 -16px 16px;padding:12px 20px;gap:14px}
+.srch{max-width:460px;margin:0;background:var(--bg)}
+.me{display:flex;align-items:center;gap:10px;margin-left:auto}.me small{display:block;color:var(--mut);font-size:12px}
+.av{width:42px;height:42px;border-radius:50%;background:var(--soft);color:var(--pri);display:grid;place-items:center;font-weight:700}
+.hero{border-radius:16px;background:linear-gradient(120deg,#050f24,#0a3a8f);position:relative;overflow:hidden}
+.hero:after{content:"☁";position:absolute;right:40px;top:10px;font-size:130px;opacity:.25}
+.card{border-radius:16px}.btn{border-radius:10px}
+.cols{display:grid;grid-template-columns:1fr 310px;gap:16px}
+.dn{width:92px;height:92px;border-radius:50%;background:conic-gradient(var(--pri) calc(var(--p)*1%),var(--bd) 0);display:grid;place-items:center;flex:none}
+.dn span{background:var(--card);width:72px;height:72px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:18px}
+.ic{width:44px;height:44px;border-radius:50%;background:var(--soft);display:grid;place-items:center;flex:none;font-size:18px}
+.it{display:flex;gap:14px;align-items:center;padding:12px;border:1px solid var(--bd);border-radius:12px;margin-bottom:10px;cursor:pointer}.it:hover{border-color:var(--pri)}
+.rd{font-size:18px;line-height:1.9;max-width:760px}
+.opt{padding:14px;font-size:17px}.opt.sel{border-color:var(--pri);background:var(--soft)}
+button:disabled{opacity:.4;cursor:default}
+@media(max-width:1000px){.cols{grid-template-columns:1fr}}
+@media(max-width:800px){main{margin-left:0}aside{transform:translateX(-100%);width:280px}aside.open{transform:none}.me div{display:none}.hero:after{font-size:80px;right:10px}}
+
+/* Liquid glass theme */
+:root{--bg:#09111f;--card:rgba(255,255,255,.095);--tx:#edf5ff;--mut:#b5c6dc;--bd:rgba(255,255,255,.19);--pri:#70a7ff;--side:rgba(10,20,39,.72);--ok:#6ee7b7;--soft:rgba(112,167,255,.16)}
+body{background:radial-gradient(ellipse at 15% 0%,#244b7b 0,transparent 38%),radial-gradient(ellipse at 95% 20%,#49316f 0,transparent 32%),linear-gradient(135deg,#07101d,#111b2c 60%,#10172a);background-attachment:fixed;color:var(--tx)}
+#login{background:radial-gradient(ellipse at top left,#3768a5,#161a35 58%,#070d17)}
+.lbox,.card,.top,.promo,.it,.cert{background:rgba(255,255,255,.09);backdrop-filter:blur(22px) saturate(150%);-webkit-backdrop-filter:blur(22px) saturate(150%);border:1px solid rgba(255,255,255,.2);box-shadow:0 12px 36px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.13)}
+.lbox{border-radius:26px}.card,.top{border-radius:22px}.top{margin-top:14px;border:1px solid var(--bd)}
+aside{background:rgba(6,14,29,.72);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);border-right:1px solid rgba(255,255,255,.13)}
+aside a.on{background:linear-gradient(135deg,rgba(112,167,255,.35),rgba(144,115,255,.22));border:1px solid rgba(255,255,255,.25);box-shadow:inset 0 1px 0 #ffffff22}
+.btn{background:linear-gradient(135deg,#5b9cff,#8069f6);border:1px solid rgba(255,255,255,.23);border-radius:14px;box-shadow:0 6px 18px #1b4f9c35}.btn.o{background:rgba(255,255,255,.08);border-color:var(--bd);color:var(--tx)}
+input,select,textarea{background:rgba(255,255,255,.08);color:var(--tx);border-color:var(--bd);border-radius:13px}option{background:#172238;color:#fff}
+.hero{background:linear-gradient(125deg,rgba(36,93,158,.8),rgba(104,74,177,.7));border:1px solid #ffffff2b;backdrop-filter:blur(16px)}
+.opt{background:rgba(255,255,255,.045);border-color:var(--bd);border-radius:14px}.opt.sel{background:rgba(112,167,255,.2)}
+.cert{color:var(--tx);border:2px solid rgba(245,205,120,.7);border-radius:24px;background:linear-gradient(135deg,rgba(255,255,255,.16),rgba(255,255,255,.055));padding:32px 20px}.cert h1{color:#ffe0a0}.cert h2{color:#fff}.big{color:#ffe0a0}
+@media(prefers-reduced-transparency:reduce){.lbox,.card,.top,.promo,.it,aside,.cert{backdrop-filter:none;-webkit-backdrop-filter:none;background:#152238}}
+@media print{body{background:white;color:#111}.cert{background:white;color:#111;border:5px double #c9a227;box-shadow:none;backdrop-filter:none}.cert h1,.cert h2,.big{color:#392d18}.card{box-shadow:none}}
+
+
+/* iPhone-inspired RED Liquid Glass theme */
+:root{color-scheme:dark;--bg:#12090d;--card:rgba(255,244,247,.075);--tx:#fff4f6;--mut:#d5b8c0;--bd:rgba(255,220,228,.18);--pri:#ff375f;--side:rgba(25,8,15,.76);--ok:#78e6b1;--soft:rgba(255,55,95,.16)}
+html{background:#12090d;scroll-behavior:smooth}
+body{background:radial-gradient(ellipse at 12% 0%,rgba(255,55,95,.32),transparent 38%),radial-gradient(ellipse at 95% 20%,rgba(166,24,67,.28),transparent 34%),radial-gradient(ellipse at 50% 100%,rgba(90,12,38,.38),transparent 48%),linear-gradient(145deg,#10080c,#1d0b12 52%,#10080c);background-attachment:fixed;color:var(--tx)}
+#login{background:radial-gradient(ellipse at 10% 0%,rgba(255,55,95,.55),transparent 45%),radial-gradient(ellipse at 100% 100%,rgba(151,18,58,.45),transparent 45%),linear-gradient(145deg,#19080f,#0d080b 72%);padding:24px}
+.lbox,.card,.top,.promo,.it,.cert{background:linear-gradient(145deg,rgba(255,245,248,.13),rgba(255,245,248,.045));backdrop-filter:blur(28px) saturate(175%);-webkit-backdrop-filter:blur(28px) saturate(175%);border:1px solid rgba(255,230,236,.2);box-shadow:0 18px 48px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.16),inset 0 -1px 0 rgba(255,55,95,.08)}
+.lbox{border-radius:30px;padding:30px;box-shadow:0 24px 70px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.18)}
+.card,.top{border-radius:24px}.top{margin-top:14px;border-color:rgba(255,230,236,.15)}
+aside{background:rgba(25,7,14,.76);backdrop-filter:blur(30px) saturate(170%);-webkit-backdrop-filter:blur(30px) saturate(170%);border-right:1px solid rgba(255,230,236,.14);box-shadow:8px 0 32px rgba(0,0,0,.16)}
+aside h2 span,.brand .logo{color:#fff;background:linear-gradient(135deg,#ff7891,#ff174f 58%,#c6003d);box-shadow:0 8px 22px rgba(255,23,79,.25)}
+.brand .logo{border:1px solid rgba(255,255,255,.3);border-radius:15px}
+.brand b{color:#fff}.brand small,.lbl{color:#d7aab7}
+aside a{color:#f7dfe5;border:1px solid transparent;transition:background .2s,border-color .2s,transform .2s}
+aside a.on{background:linear-gradient(135deg,rgba(255,55,95,.42),rgba(255,125,149,.13));border:1px solid rgba(255,185,199,.28);box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 8px 22px rgba(255,35,83,.12);color:white}
+aside a:hover{background:rgba(255,55,95,.13)}
+.btn{background:linear-gradient(135deg,#ff718a,#ff375f 55%,#e91e4d);color:white;border:1px solid rgba(255,230,236,.28);border-radius:999px;padding:11px 19px;box-shadow:0 7px 20px rgba(255,35,83,.22),inset 0 1px 0 rgba(255,255,255,.24);transition:transform .16s,filter .16s}
+.btn:hover{filter:brightness(1.08);transform:translateY(-1px)}.btn:active{transform:scale(.98)}.btn.o{background:rgba(255,245,248,.075);border-color:rgba(255,230,236,.22);color:var(--tx);box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}.btn.r{background:linear-gradient(135deg,#ff5b70,#c8102e)}
+input,select,textarea{background:rgba(255,245,248,.075);color:var(--tx);border:1px solid rgba(255,230,236,.2);border-radius:16px;padding:12px 14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}input:focus,select:focus,textarea:focus{outline:2px solid rgba(255,55,95,.5);outline-offset:1px;border-color:#ff718a}option{background:#251018;color:#fff}
+.hero{background:linear-gradient(125deg,rgba(125,14,47,.82),rgba(255,55,95,.42));border:1px solid rgba(255,220,228,.2);backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);box-shadow:inset 0 1px 0 rgba(255,255,255,.17),0 18px 40px rgba(0,0,0,.16)}
+.tag{background:rgba(255,55,95,.16);color:#ff9db0}.tag.err{background:rgba(255,60,80,.16);color:#ffb3bf}.tag.ok{background:rgba(42,190,125,.16);color:#8ff0c2}
+.bar{background:rgba(255,230,236,.12)}.bar i{background:linear-gradient(90deg,#ff7891,#ff174f)}.dn{background:conic-gradient(#ff375f calc(var(--p)*1%),rgba(255,230,236,.12) 0)}
+.ic,.av{background:rgba(255,55,95,.15);border:1px solid rgba(255,180,196,.18);color:#ff9db0}.it:hover{border-color:rgba(255,100,130,.6)}
+.opt{background:rgba(255,245,248,.045);border-color:rgba(255,230,236,.16);border-radius:16px}.opt.sel{border-color:#ff718a;background:rgba(255,55,95,.19)}.opt.k{border-color:#78e6b1;background:rgba(120,230,177,.1)}.opt.w{border-color:#ff526d;background:rgba(255,55,95,.12)}
+.promo{border-radius:20px}.cert{color:var(--tx);border:2px solid rgba(255,170,117,.75);border-radius:24px;background:linear-gradient(135deg,rgba(255,245,248,.16),rgba(255,245,248,.055));padding:32px 20px}.cert h1{color:#ffd1a6}.cert h2{color:#fff4f6}.big{color:#ffd1a6}.sign-line{border-bottom:1px solid currentColor}
+@media(max-width:800px){.lbox{padding:24px 20px;border-radius:28px}main{padding:0 12px 16px}.top{margin-top:10px;padding:11px 13px;border-radius:20px}.card{padding:14px}.btn{min-height:42px}}
+@media(prefers-reduced-transparency:reduce){.lbox,.card,.top,.promo,.it,aside,.cert{backdrop-filter:none;-webkit-backdrop-filter:none;background:#241018}}
+@media print{body{background:white;color:#111}.cert{background:white;color:#111;border:5px double #c9a227;box-shadow:none;backdrop-filter:none}.cert h1,.cert h2,.big{color:#392d18}.card{box-shadow:none}}
+
+
+/* DIGITAL CORNER — cyan/emerald frosted-glass redesign */
+:root{color-scheme:dark;--bg:#06151d;--card:rgba(8,43,57,.62);--tx:#efffff;--mut:#b7d8df;--bd:rgba(151,239,244,.25);--pri:#12d9c0;--side:rgba(3,25,37,.78);--ok:#64f3bd;--soft:rgba(18,217,192,.15)}
+html{background:#06151d;scroll-behavior:smooth}
+body{background:radial-gradient(ellipse at 8% 8%,rgba(0,225,185,.28),transparent 32%),radial-gradient(ellipse at 90% 18%,rgba(20,143,255,.27),transparent 34%),radial-gradient(ellipse at 55% 100%,rgba(22,210,174,.17),transparent 40%),linear-gradient(135deg,#06151d,#092b3b 52%,#06121c);background-attachment:fixed}
+body:before{content:"";position:fixed;inset:-40px;pointer-events:none;z-index:-1;background:radial-gradient(circle at 18% 28%,#42f4b833,transparent 20%),radial-gradient(circle at 76% 62%,#00bfff35,transparent 25%);filter:blur(28px)}
+.lbox,.card,.top,.promo,.it,.cert{background:linear-gradient(135deg,rgba(205,255,255,.13),rgba(28,130,154,.07));backdrop-filter:blur(28px) saturate(165%);-webkit-backdrop-filter:blur(28px) saturate(165%);border:1px solid rgba(172,250,255,.25);box-shadow:0 18px 48px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.15)}
+#login{background:radial-gradient(ellipse at 15% 10%,#10cdbb55,transparent 38%),radial-gradient(ellipse at 90% 90%,#168bff44,transparent 42%),linear-gradient(145deg,#04151fdd,#071a2af2);backdrop-filter:blur(12px)}
+.lbox{border-radius:30px;padding:30px;box-shadow:0 24px 70px #0006,0 0 35px #08d9c01c}.login-brand{display:flex;align-items:center;gap:12px;margin-bottom:24px}.login-brand>span{display:grid;place-items:center;width:50px;height:50px;border-radius:16px;background:linear-gradient(135deg,#20e6c4,#087de8);font-size:28px;box-shadow:0 8px 26px #00d9c044}.login-brand b{display:block;font-size:24px;color:#f4ffff}.login-brand small{display:block;color:#9fe8e7;font-size:11px}
+aside{background:rgba(3,25,37,.78);backdrop-filter:blur(32px) saturate(170%);-webkit-backdrop-filter:blur(32px) saturate(170%);border-right:1px solid #9df8f42a;box-shadow:8px 0 32px #0002}
+aside h2 span,.brand .logo{background:linear-gradient(135deg,#21efd0,#087de8);color:#fff;box-shadow:0 8px 22px #00cdbb30}.brand small,.lbl{color:#9bdde2}
+aside a{color:#d8f5f6;transition:.2s}aside a.on{background:linear-gradient(120deg,#05bda77a,#168fff3b);border:1px solid #7fffee66;box-shadow:inset 0 1px 0 #ffffff26,0 6px 22px #00d9c01b;color:#fff}aside a:hover{background:#20d8c01e}
+.btn{background:linear-gradient(135deg,#13d9bd,#087be7);border:1px solid #b5fff25c;box-shadow:0 7px 22px #00bfa733,inset 0 1px 0 #ffffff44;color:#fff}.btn.o{background:#ffffff0c;border-color:var(--bd);color:var(--tx)}.btn.r{background:linear-gradient(135deg,#ff6b91,#db2455)}
+input,select,textarea{background:rgba(2,24,37,.5);border-color:#a2f4ed3b}input:focus,select:focus,textarea:focus{outline:2px solid #16d9c0aa;border-color:#65f6e8}option{background:#092432;color:white}
+.hero{background:linear-gradient(120deg,rgba(0,120,160,.74),rgba(0,205,166,.28));border:1px solid #9df8f466;box-shadow:inset 0 1px 0 #ffffff30,0 16px 38px #00151d55}.hero:after{color:#8dfff2;opacity:.12}
+.tag{background:#15cbb71c;color:#8effe9}.tag.ok{background:#24d99c24;color:#9bffd9}.bar{background:#d6ffff1c}.bar i{background:linear-gradient(90deg,#18e5c2,#178fff)}.dn{background:conic-gradient(#13dec2 calc(var(--p)*1%),#d6ffff20 0)}.dn span{background:#073347;color:white}
+.ic,.av{background:linear-gradient(135deg,#16d9c02b,#168bff30);border:1px solid #a9fff333;color:#91fff0}.it:hover{border-color:#57f5e1aa;box-shadow:0 8px 25px #00d9c014}.opt{background:#ffffff08;border-color:#b7faff2b}.opt.sel{border-color:#16d9c0;background:#10cdbb25}.opt.k{border-color:#78e6b1;background:#78e6b11a}.promo{border-radius:20px}.promo b{color:#8fffee}.promo p{color:#b5dfe5}
+.pojok-hero{position:relative;overflow:hidden;padding:28px;border-radius:24px;background:linear-gradient(115deg,#062f49ed,#075d70b8 52%,#06243be8);border:1px solid #65f7e5aa;box-shadow:0 18px 45px #00131f66,inset 0 1px 0 #ffffff30}.pojok-hero:after{content:'◈';position:absolute;right:24px;top:-32px;font-size:160px;color:#8dfff2;opacity:.1;transform:rotate(12deg)}.pojok-hero h1{font-size:clamp(26px,4vw,38px);letter-spacing:.08em;background:linear-gradient(90deg,#fff,#7effe7);background-clip:text;-webkit-background-clip:text;color:transparent}.pojok-hero p{color:#c4ffff;max-width:680px}.pojok-chip{display:inline-block;padding:7px 12px;margin:5px 5px 0 0;border:1px solid #8cfff04a;border-radius:999px;background:#ffffff0b;color:#b9fff5;font-size:12px}.pojok-section{border-color:#7af6e53d;background:linear-gradient(135deg,#ffffff10,#00d8bd08)}
+@media(max-width:800px){.lbox{padding:24px 20px}main{padding:0 12px 16px}.hero{padding:22px 18px}.pojok-hero{padding:22px 18px}}
+@media(prefers-reduced-transparency:reduce){.lbox,.card,.top,.promo,.it,aside,.cert{backdrop-filter:none;-webkit-backdrop-filter:none;background:#092a39}}
+@media print{body{background:white;color:#111}.cert{background:white;color:#111;border:5px double #c9a227;box-shadow:none;backdrop-filter:none}}
+
+</style><style id="ferrari-liquid-glass-final">
+/* FINAL OVERRIDE — Ferrari Rosso Corsa + iPhone Liquid Glass */
+:root{color-scheme:dark;--bg:#100605;--card:rgba(255,245,244,.075);--tx:#fff7f5;--mut:#e2c3bd;--bd:rgba(255,215,207,.2);--pri:#ff2800;--side:rgba(20,5,4,.82);--ok:#7af0b5;--soft:rgba(255,40,0,.17)}
+html{background:#100605!important;scroll-behavior:smooth}
+body{color:#fff7f5!important;background:radial-gradient(ellipse at 10% 0%,rgba(255,40,0,.36),transparent 38%),radial-gradient(ellipse at 95% 18%,rgba(190,18,0,.31),transparent 35%),radial-gradient(ellipse at 50% 100%,rgba(95,7,4,.48),transparent 48%),linear-gradient(145deg,#100605,#260b08 52%,#100605)!important;background-attachment:fixed!important}
+body:before{content:"";position:fixed;inset:-35px;pointer-events:none;z-index:-1;background:radial-gradient(circle at 18% 28%,rgba(255,40,0,.22),transparent 24%),radial-gradient(circle at 76% 62%,rgba(255,120,90,.12),transparent 26%);filter:blur(32px)}
+#login{background:radial-gradient(ellipse at 10% 0%,rgba(255,40,0,.58),transparent 45%),radial-gradient(ellipse at 100% 100%,rgba(145,16,4,.5),transparent 45%),linear-gradient(145deg,#200805,#0d0605 72%)!important;padding:24px}
+.lbox,.card,.top,.promo,.it,.cert,.pojok-hero{background:linear-gradient(145deg,rgba(255,247,244,.145),rgba(255,245,242,.045))!important;backdrop-filter:blur(30px) saturate(180%)!important;-webkit-backdrop-filter:blur(30px) saturate(180%)!important;border:1px solid rgba(255,225,217,.22)!important;box-shadow:0 18px 48px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.19),inset 0 -1px 0 rgba(255,40,0,.12)!important}
+.lbox{border-radius:30px!important;padding:30px}.card,.top{border-radius:24px!important}.top{margin-top:12px;border-color:rgba(255,220,212,.18)!important}
+aside{background:rgba(24,5,4,.82)!important;backdrop-filter:blur(32px) saturate(175%)!important;-webkit-backdrop-filter:blur(32px) saturate(175%)!important;border-right:1px solid rgba(255,220,212,.16)!important;box-shadow:8px 0 34px rgba(0,0,0,.24)!important;color:#ffe8e3!important}
+aside h2 span,.brand .logo,.logo{background:linear-gradient(135deg,#ff795e,#ff2800 56%,#a30e00)!important;color:#fff!important;box-shadow:0 8px 24px rgba(255,40,0,.3)!important;border:1px solid rgba(255,255,255,.3)!important}
+aside a{color:#ffe9e5!important;border:1px solid transparent!important;transition:background .2s,border-color .2s,transform .2s}
+aside a.on{background:linear-gradient(135deg,rgba(255,40,0,.48),rgba(255,125,100,.15))!important;border:1px solid rgba(255,190,176,.34)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.17),0 8px 24px rgba(255,40,0,.16)!important;color:#fff!important}
+aside a:hover{background:rgba(255,40,0,.2)!important}
+.btn{background:linear-gradient(135deg,#ff765b,#ff2800 56%,#d81e00)!important;color:#fff!important;border:1px solid rgba(255,225,217,.32)!important;border-radius:999px!important;padding:11px 19px;box-shadow:0 7px 22px rgba(255,40,0,.25),inset 0 1px 0 rgba(255,255,255,.28)!important;transition:transform .16s,filter .16s}.btn:hover{filter:brightness(1.09);transform:translateY(-1px)}.btn:active{transform:scale(.98)}.btn.o{background:rgba(255,245,242,.075)!important;border-color:rgba(255,225,217,.23)!important;color:#fff7f5!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)!important}.btn.r{background:linear-gradient(135deg,#ff5b45,#ba1600)!important}
+input,select,textarea{background:rgba(255,245,242,.075)!important;color:#fff7f5!important;border:1px solid rgba(255,225,217,.22)!important;border-radius:16px!important;padding:12px 14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.07)!important}input:focus,select:focus,textarea:focus{outline:2px solid rgba(255,40,0,.56);outline-offset:1px;border-color:#ff765b!important}option{background:#28100c!important;color:#fff!important}
+.hero{background:linear-gradient(125deg,rgba(90,12,4,.9),rgba(255,40,0,.48) 55%,rgba(47,8,5,.91))!important;border:1px solid rgba(255,205,192,.25)!important;backdrop-filter:blur(26px) saturate(170%)!important;-webkit-backdrop-filter:blur(26px) saturate(170%)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 18px 42px rgba(0,0,0,.2)!important;color:#fff7f5!important}
+.tag{background:rgba(255,40,0,.17)!important;color:#ffad9c!important}.tag.err{background:rgba(255,45,35,.18)!important;color:#ffc0b6!important}.tag.ok{background:rgba(42,190,125,.17)!important;color:#91f3c6!important}.bar{background:rgba(255,225,217,.13)!important}.bar i{background:linear-gradient(90deg,#ff795e,#ff2800)!important}.dn{background:conic-gradient(#ff2800 calc(var(--p)*1%),rgba(255,225,217,.13) 0)!important}.dn span{background:rgba(35,9,6,.88)!important;color:white!important}.ic,.av{background:rgba(255,40,0,.17)!important;border:1px solid rgba(255,185,166,.22)!important;color:#ffad9c!important}.it:hover{border-color:rgba(255,100,75,.65)!important}
+.opt{background:rgba(255,245,242,.05)!important;border-color:rgba(255,225,217,.17)!important;border-radius:16px!important}.opt.sel{border-color:#ff765b!important;background:rgba(255,40,0,.2)!important}.opt.k{border-color:#78e6b1!important;background:rgba(120,230,177,.1)!important}.opt.w{border-color:#ff5945!important;background:rgba(255,40,0,.13)!important}
+.promo{border-radius:22px!important}.promo b{color:#ffc0b2!important}.promo p{color:#e9c7c0!important}
+.cert{color:#fff7f5!important;border:2px solid rgba(255,155,113,.8)!important;border-radius:24px!important;background:linear-gradient(135deg,rgba(255,247,244,.16),rgba(255,247,244,.055))!important}.cert h1,.big{color:#ffd0a5!important}.cert h2{color:#fff7f5!important}
+.pojok-hero{position:relative;overflow:hidden;padding:28px;border-radius:28px!important;background:linear-gradient(115deg,rgba(55,7,4,.94),rgba(190,23,0,.75) 52%,rgba(42,7,4,.94))!important;border:1px solid rgba(255,105,75,.68)!important;box-shadow:0 20px 48px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.22)!important;backdrop-filter:blur(30px) saturate(175%)!important;-webkit-backdrop-filter:blur(30px) saturate(175%)!important}.pojok-hero:after{content:'◈';position:absolute;right:24px;top:-32px;font-size:160px;color:#ffb6a6;opacity:.13;transform:rotate(12deg)}.pojok-hero h1{color:#fff7f5!important;text-shadow:0 0 26px rgba(255,40,0,.48)}.pojok-hero p{color:#ffe1d9!important}.pojok-chip{display:inline-block;border:1px solid rgba(255,205,192,.3);border-radius:999px;padding:6px 11px;margin:4px 5px 4px 0;background:rgba(255,245,242,.09);color:#ffe1d9;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+/* Neutralize older blue/teal inline-like utility classes */
+[style*="#0d9488"],[style*="#14b8a6"],[style*="#0891b2"],[style*="#06b6d4"],[style*="#0ea5e9"],[style*="#2563eb"],[style*="#2f7cf0"],[style*="#1d5fd0"],[style*="teal"],[style*="turquoise"]{border-color:rgba(255,120,90,.42)!important}
+@media(max-width:800px){.lbox{padding:24px 20px;border-radius:28px!important}main{padding:0 12px 16px}.top{margin-top:10px;padding:11px 13px;border-radius:20px!important}.card{padding:14px}.btn{min-height:42px}}
+@media(prefers-reduced-transparency:reduce){.lbox,.card,.top,.promo,.it,aside,.cert,.pojok-hero{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:#28100c!important}}
+@media print{body{background:white!important;color:#111!important}.cert{background:white!important;color:#111!important;border:5px double #c9a227!important;box-shadow:none!important;backdrop-filter:none!important}.cert h1,.cert h2,.big{color:#392d18!important}.card{box-shadow:none!important}}
+</style>
+</head><body>
+<div id="login"><div class="lbox">
+<div class="login-brand"><span>✦</span><div><b>Digital Corner</b><small>Belajar • Berkarya • Berprestasi</small></div></div>
+<label>Masuk sebagai</label><select id="lr"><option value="murid">Siswa</option><option value="guru">Guru</option></select>
+<label>Username (nama depan siswa)</label><input id="lu" value="adhisakti" placeholder="Contoh: arron" autocomplete="username"><label>Password (nomor absen)</label><input id="lp" type="password" value="01" placeholder="Masukkan nomor absen">
+<button class="btn" style="width:100%" onclick="doLogin()">Masuk ke LMS ↗</button>
+<p class="mut" id="le"></p><p class="mut">Siswa: username menggunakan nama depan dan password menggunakan nomor absen dua digit (01–36). Guru demo: guru / 123.</p></div></div>
+
+<div id="app">
+<aside id="sd"><div class="brand"><div class="logo">☁</div><div><b>SECURE LMS</b><small>Keamanan Server & Manajemen User</small></div></div><div id="nav"></div></aside>
+<main><div class="top"><button class="btn o s" id="mb" onclick="sd.classList.toggle('open')">☰</button><span class="pill" id="who"></span><span class="av" id="av"></span></div><div id="v"></div></main>
+</div>
+<script>
+let mem={};
+const G=t=>{try{const s=localStorage.getItem('lms_sec_'+t);if(s)return JSON.parse(s)}catch(e){}return mem[t]||null};
+const S=(t,d)=>{mem[t]=d;try{localStorage.setItem('lms_sec_'+t,JSON.stringify(d))}catch(e){}};
+const titleName=s=>String(s??'').trim().toLocaleLowerCase('id-ID').replace(/\s+/g,' ').replace(/(^|[\s'-])([\p{L}])/gu,(m,a,b)=>a+b.toLocaleUpperCase('id-ID'));
+const normName=s=>String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('id-ID').replace(/[^\p{L}\p{N}]/gu,'');
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $=id=>document.getElementById(id);
+const MT=[
+["Dasar Keamanan Server","Memahami prinsip dasar perlindungan server dan aset digital.","Keamanan server adalah upaya melindungi sistem, layanan, dan data dari akses tidak sah. Terapkan pembaruan rutin, konfigurasi aman, firewall, pencatatan log, dan prinsip hak akses minimum (least privilege)."],
+["Hardening Sistem Operasi Server","Mengurangi celah keamanan melalui konfigurasi sistem yang aman.","Langkah hardening meliputi menghapus layanan yang tidak diperlukan, memasang patch keamanan, menonaktifkan akun bawaan yang tidak dipakai, membatasi akses administratif, menggunakan firewall, serta melakukan audit konfigurasi berkala."],
+["Firewall dan Pembaruan Keamanan","Mengatur lalu lintas jaringan serta menjaga sistem tetap mutakhir.","Firewall mengizinkan atau menolak koneksi berdasarkan aturan. Buka hanya port yang diperlukan, batasi akses administrasi berdasarkan alamat sumber bila memungkinkan, dan pasang pembaruan dari repositori/vendor tepercaya setelah pengujian."],
+["Manajemen User dan Hak Akses","Membuat akun, mengatur peran, dan menerapkan hak akses minimum.","Setiap pengguna harus memakai akun masing-masing. Berikan izin sesuai tugas, pisahkan akun administrator dari akun harian, gunakan grup/peran, tinjau izin secara berkala, dan segera nonaktifkan akun yang tidak lagi diperlukan."],
+["Autentikasi, Kata Sandi, dan MFA","Melindungi akun melalui autentikasi yang kuat.","Gunakan kata sandi unik dan panjang, simpan dengan hash yang kuat pada aplikasi, aktifkan multi-factor authentication (MFA) untuk akses penting, batasi percobaan login, dan jangan pernah membagikan kredensial."],
+["Audit Log, Backup, dan Respons Insiden","Memantau aktivitas, memulihkan data, dan menangani insiden.","Catat login, perubahan hak akses, dan aktivitas administratif. Lindungi log dari perubahan, lakukan backup berkala dan uji pemulihannya, serta siapkan prosedur isolasi sistem, investigasi, pemulihan, dan pelaporan insiden."]
+];
+const SQ=[
+["Apa tujuan utama keamanan server?", "Mempercepat tampilan halaman saja", "Melindungi sistem dan data dari akses tidak sah", "Menghapus semua akun pengguna", "Membuka seluruh port jaringan", "Mengganti wallpaper server", "B"],
+["Prinsip least privilege berarti...", "Semua user menjadi administrator", "Izin diberikan sebanyak mungkin", "Pengguna hanya diberi izin yang diperlukan", "Semua akun memakai satu kata sandi", "Semua pengguna bebas memasang aplikasi", "C"],
+["Apa fungsi firewall pada server?", "Mengatur lalu lintas jaringan berdasarkan aturan", "Membuat backup otomatis selalu", "Mengganti sistem operasi", "Menyimpan kata sandi dalam teks biasa", "Menaikkan kecepatan CPU", "A"],
+["Tindakan yang tepat untuk akun pegawai yang sudah keluar adalah...", "Membiarkannya aktif", "Mengganti nama akun saja", "Membagikan akunnya kepada pegawai lain", "Menonaktifkan akun dan meninjau aksesnya", "Memberinya hak administrator permanen", "D"],
+["Mengapa pembaruan keamanan penting?", "Agar semua port terbuka", "Untuk memperbaiki kerentanan yang diketahui", "Agar kata sandi tidak diperlukan", "Untuk menonaktifkan pencatatan log", "Supaya backup tidak diperlukan", "B"],
+["Apa praktik terbaik untuk akun administrator?", "Dipakai bersama seluruh tim", "Digunakan untuk semua aktivitas harian", "Dilindungi MFA dan digunakan hanya saat diperlukan", "Kata sandinya ditempel di server", "Menggunakan kata sandi yang sama dengan semua akun", "C"],
+["Informasi apa yang penting dicatat dalam audit log?", "Login dan perubahan hak akses", "Warna tema aplikasi", "Ukuran monitor pengguna", "Daftar film pengguna", "Jenis makanan pengguna", "A"],
+["Backup yang baik harus...", "Disimpan hanya di server yang sama tanpa perlindungan", "Tidak pernah diuji", "Dapat diakses semua pengguna", "Dilakukan berkala dan diuji pemulihannya", "Menghapus salinan lama setiap hari tanpa kebijakan", "D"],
+["Saat menemukan indikasi server disusupi, langkah awal yang tepat adalah...", "Menghapus semua bukti log", "Mengikuti prosedur insiden dan mengisolasi sistem bila diperlukan", "Membagikan kredensial ke semua orang", "Membiarkan sistem tanpa pemeriksaan", "Mematikan semua sistem tanpa koordinasi atau pencatatan", "B"],
+["Mengapa setiap pengguna sebaiknya memiliki akun sendiri?", "Agar aktivitas dapat diaudit dan tanggung jawab jelas", "Agar semua orang punya hak admin", "Supaya kata sandi boleh dibagikan", "Agar log tidak dibutuhkan", "Agar semua orang menggunakan sesi yang sama", "A"],
+["Apa langkah paling aman saat membuat akun pengguna baru?", "Gunakan akun admin bersama", "Berikan semua hak akses terlebih dahulu", "Gunakan nama akun yang sama untuk semua orang", "Bagikan kata sandi lewat grup umum", "Verifikasi kebutuhan, buat akun unik, dan beri hak minimum", "E"],
+["Bagaimana cara menyimpan kata sandi pengguna pada aplikasi dengan aman?", "Dalam file teks biasa", "Di lembar kerja yang dapat dibuka semua staf", "Dengan hash kata sandi yang kuat dan salt", "Di dalam nama pengguna", "Di log server agar mudah dicari", "C"],
+["Kapan hak akses pengguna perlu ditinjau?", "Hanya ketika server rusak", "Secara berkala dan saat peran atau pekerjaan berubah", "Tidak perlu ditinjau setelah dibuat", "Setiap pengguna meminta akses admin", "Hanya setelah aplikasi dihapus", "B"],
+["Apa kegunaan autentikasi multi-faktor (MFA)?", "Menghapus kebutuhan semua akun", "Membuat semua pengguna menjadi admin", "Mengganti fungsi firewall", "Menambah lapisan verifikasi selain kata sandi", "Membagikan kode masuk antar pengguna", "D"],
+["Apa yang sebaiknya dilakukan terhadap akun yang tidak lagi digunakan?", "Nonaktifkan atau hapus sesuai kebijakan dan audit aksesnya", "Biarkan aktif selamanya", "Gunakan sebagai akun bersama", "Ubah menjadi akun administrator", "Publikasikan kata sandinya", "A"],
+["Mengapa akses SSH administrator sebaiknya dibatasi?", "Agar server tidak dapat diperbarui", "Agar semua pengguna bisa masuk", "Untuk mengurangi permukaan serangan dan akses yang tidak perlu", "Agar log login berhenti dibuat", "Untuk membuka semua port jaringan", "C"],
+["Apa tindakan yang tepat jika mendeteksi banyak percobaan login gagal?", "Matikan audit log", "Abaikan karena pasti normal", "Kirim kata sandi ke pengguna lain", "Hapus akun seluruh pengguna tanpa pemeriksaan", "Periksa log, terapkan pembatasan login, dan investigasi sumbernya", "E"],
+["Apa tujuan pemisahan akun administrator dan akun harian?", "Agar akun harian selalu memiliki hak penuh", "Mengurangi risiko jika aktivitas harian atau akun biasa disalahgunakan", "Supaya tidak perlu MFA", "Agar semua tindakan tidak tercatat", "Agar kata sandi bisa digunakan bersama", "B"],
+["Bagaimana sebaiknya izin folder tugas siswa pada server diatur?", "Semua siswa dapat membaca dan mengubah semua folder", "Semua folder dibuat publik", "Gunakan satu akun untuk seluruh kelas", "Setiap siswa hanya dapat mengakses folder sesuai kewenangannya", "Nonaktifkan autentikasi folder", "D"],
+["Mengapa log keamanan perlu dilindungi dari perubahan?", "Agar bukti aktivitas tetap dapat dipercaya saat audit atau investigasi", "Agar kapasitas disk cepat penuh", "Supaya pengguna dapat menghapus jejaknya", "Agar server tidak memerlukan backup", "Agar semua pengguna bisa mengedit log", "A"]
+];
+const ROSTER=[
+'ADHISAKTI DÄMÄR PAMUNGKAS','ADILLA AYU RAHMAWATI','AISYAH ANINDA OKTA','AISYAH ARUMI DAMAYANTI','AISYAH CAHYOWATI','ALDO SETYAWAN','ALFAFA AZURA NAJIT','ALFINAH ROBITHOH','AMEEL SONIA BENATA','ANANDA HABIB BAYHAQI','ANDREA RIZKY PRATAMA','ANISAH SEKAR WINIASTUTI','APRILIA NAURA PUTRI','ARDIAS VIDI PRASETYO','ARRON NICO FIRJATULLAH','AULIADIAH AYU KUSUMA WATI','AULYA MIFTAHUL JANNAH','AURA EKA SAPUTRI','AYU FEBRIYANA','AZZAHRA SYIFA RAHMADHANI','BANGUN PRATAMA','BILALFI AROHMAH SUTRISNO','BIMA ARYA HERLAMBANG','DANA SALSA BELA','DARMAWAN ADITYA PRATAMA','DEKA WIJAYA KUSUMA','DHERA AMEYLIA RAHMADHANI','DIA SALMA SALSABILA','DIMAS DWI PRAKOSO','DWI KARSASINI FISA RAHMA','EKA YHULASNA SAPUTRA','ERLAND OKTAVIANSYAH','FAIDATUN FAUZIAH','FAIRUS FATIHUL IHSAN HERSAPUTRA','FAIRUSH SYIWI ANJANY','FARID RIFQI AT THORIQ'
+];
+function makeUsername(name,used){let base=name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');if(!base)base='siswa';let u=base,n=2;while(used.has(u)){u=base+n++;}used.add(u);return u;}
+function firstUsername(name){return String(name||'siswa').trim().split(/\s+/)[0].normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'')||'siswa';}
+function rosterNo(name){const ix=ROSTER.findIndex(n=>normName(n)===normName(name));return ix>=0?ix+1:0;}
+function absenPassword(name,fallback){const no=rosterNo(name);return String(no||fallback||1).padStart(2,'0');}
+function init(){
+ let users=G('users');
+ if(!users)users=[{id:1,nama:'Dina Nurfitasari',role:'guru',username:'guru',password:'123'},{id:2,nama:'Andi Pratama',role:'murid',username:'andi',password:'01'}];
+ // Perbarui tampilan nama dan migrasikan akun siswa ke username nama depan + password nomor absen.
+ let teacherChanged=false; users.forEach(u=>{if(u.role==='guru' && String(u.username).toLowerCase()==='guru' && u.nama==='Budi Santoso'){u.nama='Dina Nurfitasari';teacherChanged=true;} if(u.role==='murid'){const pretty=titleName(u.nama);if(u.nama!==pretty){u.nama=pretty;teacherChanged=true;} const no=rosterNo(u.nama);if(no){const un=firstUsername(u.nama),pw=String(no).padStart(2,'0');if(u.username!==un||u.password!==pw){u.username=un;u.password=pw;teacherChanged=true;}}}});
+ if(teacherChanged)S('users',users);
+ // Tambahkan siswa roster yang belum ada; nomor absen mengikuti urutan daftar siswa (01–36).
+ let next=users.reduce((a,b)=>Math.max(a,Number(b.id)||0),0)+1;let added=false;
+ ROSTER.forEach((rawNama,i)=>{const nama=titleName(rawNama);if(!users.some(u=>u.role==='murid'&&normName(u.nama)===normName(nama))){users.push({id:next++,nama,role:'murid',username:firstUsername(nama),password:String(i+1).padStart(2,'0')});added=true;}});
+ if(added||!G('users'))S('users',users);
+ if(!G('materi'))S('materi',MT.map((m,i)=>({id:i+1,judul:m[0],deskripsi:m[1],isi:m[2]})));
+ if(!G('soal'))S('soal',SQ.map((q,i)=>({id:i+1,pertanyaan:q[0],a:q[1],b:q[2],c:q[3],d:q[4],e:q[5],kunci:q[6],sumber:'manual'})));
+ let soalNow=G('soal')||[],changedSoal=false;
+ soalNow.forEach(q=>{const seed=SQ.find(x=>x[0]===q.pertanyaan);if(seed){if(!q.e||q.e==='Pilihan ini tidak tepat'){q.e=seed[5];changedSoal=true;}if(!q.kunci||!/[ABCDE]/.test(q.kunci)){q.kunci=seed[6];changedSoal=true;}}else if(!q.e){q.e='Pilihan E';changedSoal=true;}});
+ let maxSoal=soalNow.reduce((m,q)=>Math.max(m,Number(q.id)||0),0);
+ SQ.forEach(q=>{if(!soalNow.some(x=>x.pertanyaan===q[0])){soalNow.push({id:++maxSoal,pertanyaan:q[0],a:q[1],b:q[2],c:q[3],d:q[4],e:q[5],kunci:q[6],sumber:'manual'});changedSoal=true;}});
+ if(changedSoal)S('soal',soalNow);
+ if(!G('hasil'))S('hasil',[]);if(!G('progress'))S('progress',[]);
+}
+init();let me=null,page='dash',eq=0,ea={},mi=0,qy='',pj=0,pa={},pb={};
+function doLogin(){const entered=$('lu').value.trim();const u=G('users').find(x=>(String(x.username).toLocaleLowerCase('id-ID')===entered.toLocaleLowerCase('id-ID')||normName(x.nama)===normName(entered))&&x.password===$('lp').value&&x.role===$('lr').value);
+ if(!u){$('le').textContent='Username/password/peran salah';return}
+ me=u;$('login').style.display='none';$('app').style.display='block';$('who').innerHTML='<b>'+u.nama+'</b><small>'+(u.role==='guru'?'Guru':'Siswa')+'</small>';$('av').textContent=u.nama[0];page='dash';nav()}
+$('lr').onchange=e=>{if(e.target.value==='guru'){$('lu').value='guru';$('lp').value='123'}else{$('lu').value='';$('lp').value=''}};
+function nav(){const g=me.role==='guru';
+ const it=[['dash','▥','Beranda'],['materi','▤','Materi Keamanan Server'],['pojok','◈','Pojok Digital']];
+ if(g)it.push(['bank','☷','Bank Soal']);
+ it.push(['eval','✎',g?'Evaluasi (Soal & Kunci)':'Evaluasi'],['nilai','▦','Hasil Nilai']);
+ if(g)it.push(['dmurid','☻','Data Murid']);
+ if(!g)it.push(['sert','✦','Sertifikat']);
+ if(g)it.push(['db','⛁','Database']);
+ $('nav').innerHTML='<div class="lbl">MENU UTAMA</div>'+it.map(i=>`<a class="${page===i[0]?'on':''}" onclick="go('${i[0]}')"><i>${i[1]}</i>${i[2]}</a>`).join('')+
+ '<div class="promo"><b>Secure Learning</b><p>Materi, evaluasi, dan sertifikat di satu tempat.</p></div>'+
+ `<a class="${page==='akun'?'on':''}" onclick="go('akun')"><i>⚙</i>Keamanan Akun</a><a onclick="location.reload()"><i>⇥</i>Keluar akun</a>`;
+ render()}
+function go(p,k){page=p;if(!k){mi=0;pj=0}if(p!=='materi')qy='';eq=0;ea={};$('sd').classList.remove('open');nav();window.scrollTo(0,0)}
+function myHasil(){return G('hasil').filter(h=>h.user_id===me.id)}
+function render(){const views={dash,materi,bank,eval:ev,nilai,sert,db,akun,pojok,dmurid};const view=views[page]||dash;try{$('v').innerHTML=view()}catch(err){console.error(err);$('v').innerHTML='<div class="card"><h2>Menu gagal dibuka</h2><p>Silakan muat ulang halaman. Jika masih terjadi, kirim tangkapan layar dan pesan error browser.</p><button class="btn" onclick="go(\'dash\')">Kembali ke Beranda</button></div>'}}
+function dash(){const g=me.role==='guru',m=G('materi'),pr=G('progress').filter(p=>p.user_id===me.id),h=myHasil(),last=h[h.length-1],pct=Math.round(pr.length/m.length*100),all=G('hasil'),avg=all.length?Math.round(all.reduce((a,b)=>a+b.nilai,0)/all.length):'-';
+ const side=g?`<div class="card"><b>Ringkasan Kelas</b><p class="mut">Total pengerjaan: <b>${all.length}</b><br>Rata-rata nilai: <b>${avg}</b></p><button class="btn s" onclick="go('nilai')">Lihat Hasil Nilai</button></div>`:
+ `<div class="card"><b>Progress Belajar</b><div class="row" style="justify-content:flex-start;margin-top:12px"><div class="dn" style="--p:${pct}"><span>${pct}%</span></div><div class="mut">${pr.length} dari ${m.length} materi selesai</div></div><p class="mut" style="background:var(--soft);padding:10px;border-radius:10px">💡 "Terus belajar, karena teknologi selalu berkembang!"</p></div>`;
+ return `<div class="hero"><h1>Selamat Datang, ${esc(me.nama)}! 👋</h1><p>Di LMS Keamanan Server, tempat kamu belajar melindungi server dan mengelola akun pengguna.</p><button class="btn" onclick="go('${g?'bank':'materi'}')">▶ ${g?'Kelola Bank Soal':'Mulai Belajar'}</button> <button class="btn o" style="color:#fff;border-color:#fff8" onclick="go('materi')">Lihat Materi</button></div>
+ <div class="grid"><div class="card stat"><small>Total Materi</small><b>${m.length}</b><small>Modul pembelajaran</small></div>
+ <div class="card stat"><small>Bank Soal</small><b>${G('soal').length}</b><small>Latihan & ujian</small></div>
+ <div class="card stat"><small>${g?'Rata-rata Nilai':'Nilai Terakhir'}</small><b>${g?avg:last?last.nilai:'-'}</b><small>${g?'Semua murid':last?pred(last.nilai):'Belum ada'}</small></div>
+ <div class="card stat"><small>${g?'Pengerjaan':'Progress'}</small><b>${g?all.length:pct+'%'}</b><small>${g?'Total hasil':pr.length+' dari '+m.length+' materi'}</small></div></div>
+ <div class="cols"><div class="card"><div class="row"><b>Materi Pembelajaran</b><a style="color:var(--pri);cursor:pointer" onclick="go('materi')">Lihat Semua →</a></div><div style="margin-top:12px">${m.map(x=>{const d=pr.some(p=>p.materi_id===x.id);return `<div class="it" onclick="mi=${x.id};go('materi',1)"><div class="ic">📄</div><div style="flex:1"><b>${x.id}. ${esc(x.judul)}</b><div class="mut">${esc(x.deskripsi)}</div></div>${g?'':`<span class="tag ${d?'ok':''}">${d?'✔ Selesai':'Belum Dimulai'}</span>`}</div>`}).join('')}</div></div>
+ <div>${side}<div class="card"><b>📢 Pengumuman</b><p class="mut">Selamat datang di LMS Keamanan Server! Jangan lupa selesaikan materi dan kerjakan evaluasi untuk mendapatkan nilai terbaik.</p></div></div></div>`}
+const pred=n=>n>=85?'Sangat Baik':n>=70?'Baik':'Perlu Ditingkatkan';
+function materi(){const g=me.role==='guru',pr=G('progress').filter(p=>p.user_id===me.id),M=G('materi');
+ if(!mi){const L=M.filter(x=>(x.judul+x.deskripsi+x.isi).toLowerCase().includes(qy.toLowerCase()));
+  return `<h2>Materi Keamanan Server</h2>${qy?`<p class="mut">Hasil pencarian: "${esc(qy)}"</p>`:''}`+(L.map(x=>{const d=pr.some(p=>p.materi_id===x.id);return `<div class="it" onclick="mi=${x.id};go('materi',1)"><div class="ic">📘</div><div style="flex:1"><b>${x.id}. ${esc(x.judul)}</b><div class="mut">${esc(x.deskripsi)}</div></div>${g?'':`<span class="tag ${d?'ok':''}">${d?'✔ Selesai':'Belum'}</span>`}<button class="btn s">Buka</button></div>`}).join('')||'<p>Materi tidak ditemukan.</p>')}
+ const i=M.findIndex(x=>x.id===mi),x=M[i],d=pr.some(p=>p.materi_id===x.id);
+ return `<button class="btn o s" onclick="go('materi')">‹ Daftar Materi</button><div class="row mut" style="margin-top:14px"><span>Materi ${i+1} dari ${M.length}</span>${d?'<span class="tag ok">✔ Selesai</span>':''}</div><div class="bar" style="margin:8px 0 16px"><i style="width:${(i+1)/M.length*100}%"></i></div>
+ <div class="card"><h2 style="margin-top:0">${esc(x.judul)}</h2><div class="card" style="background:var(--soft);border:0">🎯 <b>Tujuan belajar:</b> ${esc(x.deskripsi)}</div><div class="rd">${esc(x.isi)}</div></div>
+ <div class="row"><button class="btn o" ${i?'':'disabled'} onclick="mi=${i?M[i-1].id:0};go('materi',1)">‹ Sebelumnya</button>${!g&&!d?`<button class="btn" style="background:var(--ok)" onclick="done(${x.id})">✔ Tandai Selesai</button>`:''}${i<M.length-1?`<button class="btn" onclick="mi=${M[i+1]?M[i+1].id:0};go('materi',1)">Berikutnya ›</button>`:`<button class="btn" onclick="go('eval')">Kerjakan Evaluasi ›</button>`}</div>`}
+function done(id){const p=G('progress');p.push({user_id:me.id,materi_id:id});S('progress',p);render()}
+function bank(){const g=me.role==='guru',q=G('soal');
+ return `<h2>Bank Soal</h2>${g?`<div class="card"><b>Upload Soal LKPD / Bank Soal</b><p class="mut">Unggah Excel (.xlsx/.xls), CSV, Word (.docx), atau TXT. Header yang didukung: Pertanyaan/Soal, A, B, C, D, E, Kunci/Jawaban. Soal yang berhasil diimpor akan muncul pada bank soal dan evaluasi.</p>
+ <input type="file" id="fi" accept=".xlsx,.xls,.csv,.docx,.txt" onchange="imp(this)">
+ <button class="btn o s" onclick="tpl()">⬇ Template Excel</button> <button class="btn o s" onclick="expSoal()">⬇ Ekspor Excel</button>
+ <p class="mut">PDF belum didukung langsung. Ubah PDF menjadi Word/Excel/TXT terlebih dahulu. Pastikan setiap soal memiliki pilihan A–E dan kunci jawaban A/B/C/D/E.</p><div id="im" role="status" aria-live="polite"></div></div>`:''}
+ <div class="card sc"><table><tr><th>#</th><th>Pertanyaan</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th>${g?'<th>Kunci</th><th></th>':''}</tr>
+ ${q.map((s,i)=>`<tr><td>${i+1}</td><td>${esc(s.pertanyaan)}</td><td>${esc(s.a)}</td><td>${esc(s.b)}</td><td>${esc(s.c)}</td><td>${esc(s.d)}</td><td>${esc(s.e||'')}</td>${g?`<td><b>${s.kunci}</b></td><td><button class="btn r s" onclick="delQ(${s.id})">Hapus</button></td>`:''}</tr>`).join('')}</table></div>`}
+function delQ(id){S('soal',G('soal').filter(s=>s.id!==id));render()}
+function normHeader(v){return String(v??'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[ _-]+/g,' ').trim()}
+function addQ(rows,src){
+ const box=$('im');
+ if(!Array.isArray(rows)||!rows.length){box.innerHTML='<p class="tag err">Tidak ada soal yang terbaca. Periksa isi file dan baris judul kolom.</p>';return}
+ const q=G('soal')||[];let n=q.reduce((a,b)=>Math.max(a,Number(b.id)||0),0),c=0,skip=0;const added=[];
+ rows.forEach((raw,idx)=>{
+  const r={};Object.keys(raw||{}).forEach(k=>r[normHeader(k)]=raw[k]);
+  const get=(...keys)=>{for(const k of keys){const v=r[normHeader(k)];if(v!==undefined&&v!==null&&String(v).trim()!=='')return String(v).trim()}return ''};
+  const question=get('pertanyaan','soal','question','questions','pertanyaan soal');
+  const a=get('a','opsi a','pilihan a','option a'),b=get('b','opsi b','pilihan b','option b'),cc=get('c','opsi c','pilihan c','option c'),d=get('d','opsi d','pilihan d','option d'),ee=get('e','opsi e','pilihan e','option e');
+  let key=get('kunci','kunci jawaban','jawaban','jawaban benar','answer','correct answer','key').toUpperCase().replace(/^(JAWABAN|KUNCI)\s*[:=]\s*/,'').trim();
+  const km=key.match(/(?:^|\b)([ABCDE])(?:\b|$)/);key=km?km[1]:key;
+  if(!question||!a||!b||!cc||!d||!ee||! /^[ABCDE]$/.test(key)){skip++;return}
+  // Avoid accidental duplicate imports from the same file/content.
+  const sig=[question,a,b,cc,d,ee,key].join('|').toLowerCase();
+  if(q.some(x=>[x.pertanyaan,x.a,x.b,x.c,x.d,x.e,x.kunci].join('|').toLowerCase()===sig)){skip++;return}
+  added.push({id:++n,pertanyaan:question,a,b,c:cc,d,e:ee,kunci:key,sumber:src});c++;
+ });
+ if(c){S('soal',q.concat(added));render();box=$('im');box.innerHTML=`<p class="tag ok">Berhasil mengimpor ${c} soal dari ${esc(src)}. Soal tersedia di Bank Soal dan Evaluasi.${skip?` ${skip} baris dilewati karena tidak lengkap, kunci tidak valid, atau duplikat.`:''}</p>`}
+ else box.innerHTML=`<p class="tag err">Tidak ada soal yang diimpor. ${skip} baris dilewati. Pastikan kolom Pertanyaan, A, B, C, D, E, dan Kunci terisi; kunci harus A, B, C, D, atau E. Untuk Excel/CSV, gunakan baris pertama sebagai judul kolom.</p>`;
+}
+function imp(el){
+ const f=el.files&&el.files[0];if(!f)return;const box=$('im');box.innerHTML='<p class="mut">Membaca file…</p>';
+ const ext=f.name.split('.').pop().toLowerCase(),rd=new FileReader();
+ rd.onerror=()=>{box.innerHTML='<p class="tag err">File tidak dapat dibaca. Coba simpan ulang lalu unggah kembali.</p>';el.value=''};
+ try{
+  if(ext==='docx'){
+   rd.onload=async e=>{try{if(!window.mammoth)throw Error('Pustaka Word tidak tersedia. Periksa koneksi internet lalu muat ulang halaman.');const r=await mammoth.extractRawText({arrayBuffer:e.target.result});const rows=parseTxt(r.value);addQ(rows,f.name)}catch(err){box.innerHTML=`<p class="tag err">Gagal membaca Word: ${esc(err.message||err)}</p>`}finally{el.value=''}};rd.readAsArrayBuffer(f)
+  }else if(ext==='txt'){
+   rd.onload=e=>{try{addQ(parseTxt(e.target.result),f.name)}catch(err){box.innerHTML=`<p class="tag err">Gagal membaca TXT: ${esc(err.message||err)}</p>`}finally{el.value=''}};rd.readAsText(f)
+  }else if(['xlsx','xls','csv'].includes(ext)){
+   rd.onload=e=>{try{if(!window.XLSX)throw Error('Pustaka Excel tidak tersedia. Periksa koneksi internet lalu muat ulang halaman.');const wb=XLSX.read(e.target.result,{type:'array'});if(!wb.SheetNames.length)throw Error('File tidak memiliki lembar kerja.');const sheet=wb.Sheets[wb.SheetNames[0]],js=XLSX.utils.sheet_to_json(sheet,{defval:''});addQ(js,f.name)}catch(err){box.innerHTML=`<p class="tag err">Gagal membaca file: ${esc(err.message||err)}</p>`}finally{el.value=''}};rd.readAsArrayBuffer(f)
+  }else{box.innerHTML='<p class="tag err">Format tidak didukung. Gunakan XLSX, XLS, CSV, DOCX, atau TXT.</p>';el.value=''}
+ }catch(err){box.innerHTML=`<p class="tag err">Upload gagal: ${esc(err.message||err)}</p>`;el.value=''}
+}
+function parseTxt(t){const out=[];let cur=null;t.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).forEach(l=>{let m;
+ if(m=l.match(/^\d+[.)]\s*(.+)/)){cur={pertanyaan:m[1]};out.push(cur)}
+ else if(cur&&(m=l.match(/^([A-E])[.)]\s*(.+)/i)))cur[m[1].toLowerCase()]=m[2];
+ else if(cur&&(m=l.match(/^(kunci|jawaban)[^:=]*[:=]\s*([A-E])/i)))cur.kunci=m[2].toUpperCase();
+ else if(cur&&!cur.a)cur.pertanyaan+=' '+l});return out}
+function tpl(){const ws=XLSX.utils.aoa_to_sheet([['Pertanyaan','A','B','C','D','E','Kunci'],['Apa fungsi firewall?','Mengatur lalu lintas jaringan','Membuat akun','Mengganti OS','Menyimpan kata sandi','Menaikkan kecepatan CPU','A']]),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Soal');XLSX.writeFile(wb,'template-soal.xlsx')}
+function expSoal(){const ws=XLSX.utils.json_to_sheet(G('soal').map(s=>({Pertanyaan:s.pertanyaan,A:s.a,B:s.b,C:s.c,D:s.d,E:s.e,Kunci:s.kunci}))),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Soal');XLSX.writeFile(wb,'bank-soal.xlsx')}
+function ev(){const q=G('soal');
+ if(me.role==='guru')return `<h2>Evaluasi — Soal & Kunci Jawaban</h2>`+q.map((s,i)=>`<div class="card"><b>${i+1}. ${esc(s.pertanyaan)}</b>${['a','b','c','d','e'].map(o=>`<div class="opt ${s.kunci===o.toUpperCase()?'k':''}">${o.toUpperCase()}. ${esc(s[o])}</div>`).join('')}<span class="tag ok">Kunci: ${s.kunci}</span></div>`).join('');
+ if(!q.length)return '<p>Belum ada soal.</p>';
+ const s=q[eq],n=q.length;
+ return `<h2>Evaluasi / Ujian</h2><div class="row mut"><span>Soal ${eq+1} dari ${n}</span><span>Terjawab ${Object.keys(ea).length}/${n}</span></div><div class="bar" style="margin:8px 0 16px"><i style="width:${(eq+1)/n*100}%"></i></div>
+ <div class="card"><div style="font-size:19px;font-weight:600;margin-bottom:10px">${esc(s.pertanyaan)}</div>${['a','b','c','d','e'].map(o=>{const O=o.toUpperCase();return `<div class="opt ${ea[s.id]===O?'sel':''}" onclick="ea[${s.id}]='${O}';render()">${O}. ${esc(s[o])}</div>`}).join('')}</div>
+ <div class="row"><button class="btn o" ${eq?'':'disabled'} onclick="eq--;render()">‹ Sebelumnya</button>${eq<n-1?`<button class="btn" onclick="eq++;render()">Berikutnya ›</button>`:`<button class="btn" style="background:var(--ok)" onclick="submitEv()">Kirim Jawaban</button>`}</div>
+ <div class="card" style="margin-top:12px"><span class="mut">Navigasi soal</span><br>${q.map((z,i)=>`<button class="btn s ${i===eq?'':'o'}" style="margin:3px;${ea[z.id]&&i!==eq?'border-color:var(--ok)':''}" onclick="eq=${i};render()">${i+1}</button>`).join('')}</div>`}
+function submitEv(){
+ const q=G('soal')||[];if(!q.length){alert('Belum ada soal evaluasi. Silakan hubungi guru.');return}
+ let b=0,terjawab=0;const ans={};
+ q.forEach(s=>{ans[s.id]=ea[s.id]||'';if(ans[s.id])terjawab++;if(ans[s.id]===s.kunci)b++});
+ const nilai=Math.round(b/q.length*100),h=G('hasil')||[],id=Date.now();
+ const hasilBaru={id,user_id:me.id,nilai,benar:b,total:q.length,terjawab,kosong:q.length-terjawab,salah:terjawab-b,jawaban:ans,tanggal:new Date().toLocaleDateString('id-ID')};
+ h.push(hasilBaru);S('hasil',h);selH=id;page='sert';nav();
+}
+function nilai(){const g=me.role==='guru',us=G('users'),h=g?G('hasil'):myHasil();
+ return `<h2>Hasil Nilai</h2>${g&&h.length?`<div class="card"><button class="btn r" onclick="hapusSemuaHasil()">Hapus Semua Hasil Nilai</button><p class="mut">Guru dapat menghapus satu hasil atau seluruh riwayat nilai. Tindakan ini tidak dapat dibatalkan.</p></div>`:''}<div class="card sc"><table><tr>${g?'<th>Murid</th>':''}<th>Tanggal</th><th>Benar</th><th>Nilai</th><th>Predikat</th>${g?'<th>Aksi</th>':''}</tr>${h.map(x=>`<tr>${g?`<td>${esc((us.find(u=>u.id===x.user_id)||{}).nama)}</td>`:''}<td>${x.tanggal}</td><td>${x.benar}/${x.total}</td><td><b>${x.nilai}</b></td><td>${pred(x.nilai)}</td>${g?`<td><button class="btn r s" onclick="hapusHasil(${x.id})">Hapus</button></td>`:''}</tr>`).join('')||'<tr><td colspan="6">Belum ada hasil</td></tr>'}</table></div>`}
+function hapusHasil(id){if(me.role!=='guru')return;if(!confirm('Hapus hasil nilai ini? Tindakan tidak dapat dibatalkan.'))return;S('hasil',G('hasil').filter(x=>Number(x.id)!==Number(id)));if(Number(selH)===Number(id))selH=0;render()}
+function hapusSemuaHasil(){if(me.role!=='guru')return;if(!confirm('Yakin ingin menghapus SEMUA hasil nilai seluruh siswa? Tindakan tidak dapat dibatalkan.'))return;S('hasil',[]);selH=0;render()}
+let selH=0;
+function sert(){const us=G('users'),all=(me.role==='guru'?G('hasil'):myHasil()).slice().sort((a,b)=>a.id-b.id);
+ if(!all.length)return '<h2>Sertifikat</h2><div class="card">Belum ada hasil evaluasi. Murid harus mengerjakan menu Evaluasi dulu.</div>';
+ const x=all.find(a=>a.id===selH)||all[all.length-1],u=us.find(a=>a.id===x.user_id)||{nama:'-'},lulus=x.nilai>=70;
+ const terjawab=Number.isFinite(x.terjawab)?x.terjawab:Object.values(x.jawaban||{}).filter(Boolean).length;
+ const kosong=Number.isFinite(x.kosong)?x.kosong:Math.max(0,x.total-terjawab);
+ const salah=Number.isFinite(x.salah)?x.salah:Math.max(0,terjawab-x.benar);
+ const sel=`<div class="card noprint"><b>${me.role==='guru'?'Pilih murid / hasil':'Riwayat evaluasi saya'}</b><select onchange="selH=Number(this.value);render()">${all.map(a=>`<option value="${a.id}" ${a.id===x.id?'selected':''}>${esc((us.find(k=>k.id===a.user_id)||{}).nama)} — nilai ${a.nilai} (${a.tanggal})</option>`).join('')}</select></div>`;
+ return `<h2 class="noprint">Hasil Evaluasi & Sertifikat</h2>${sel}
+ <div class="grid noprint"><div class="card stat"><small>Nilai</small><b>${x.nilai}/100</b><small>${pred(x.nilai)}</small></div><div class="card stat"><small>Jawaban benar</small><b>${x.benar}</b><small>dari ${x.total} soal</small></div><div class="card stat"><small>Jawaban salah</small><b>${salah}</b><small>Jawaban terisi: ${terjawab}</small></div><div class="card stat"><small>Belum dijawab</small><b>${kosong}</b><small>Total soal: ${x.total}</small></div></div>
+ <div class="cert"><p style="letter-spacing:.18em;font-size:12px">SECURE LMS · KEAMANAN SERVER</p><h1>SERTIFIKAT</h1><h2>HASIL EVALUASI</h2><p>Diberikan kepada</p><h2>${esc(u.nama)}</h2><p>Telah menyelesaikan evaluasi pembelajaran pada</p><p><b>Keamanan Server dan Manajemen User</b></p><div class="big">${x.nilai}/100</div><p><b>Jumlah soal:</b> ${x.total} &nbsp; · &nbsp; <b>Benar:</b> ${x.benar} &nbsp; · &nbsp; <b>Salah:</b> ${salah}</p><p><b>Terjawab:</b> ${terjawab} &nbsp; · &nbsp; <b>Kosong:</b> ${kosong}</p><p><b>STATUS: ${lulus?'TUNTAS':'BELUM TUNTAS (nilai minimum 70)'}</b></p><p>${esc(x.tanggal)} · No. LMS-${String(x.id).slice(-8)}</p><div class="sign-area"><p>Klaten, ${esc(x.tanggal)}<br>Guru Mata Pelajaran</p><div class="sign-line"></div><b class="sign-name">Dina Nurfitasari</b></div></div>
+ <p class="noprint" style="text-align:center"><button class="btn" onclick="print()">🖨 Cetak / Simpan PDF</button> <button class="btn o" onclick="go('eval')">Kembali ke Evaluasi</button></p>`}
+
+function akun(){return `<h2>Keamanan Akun</h2><div class="card"><p class="mut">Login: <b>${esc(me.username)}</b></p><label>Password baru</label><input id="np" type="password"><button class="btn" onclick="chPw()">Simpan Password</button><p id="pm" class="mut"></p></div>`}
+function chPw(){const v=$('np').value;if(v.length<3){$('pm').textContent='Minimal 3 karakter';return}const u=G('users');u.find(x=>x.id===me.id).password=v;S('users',u);$('pm').textContent='Password diganti ✔'}
+const PD=[['Pekan 1','Flashdisk bergantian',45],['Pekan 2','Kirim lewat chat grup',30],['Pekan 3','Hardening Server',14],['Pekan 4','Manajemen User',9],['Pekan 5','Audit Keamanan',8]];
+const PQ=[
+{q:'Sebutkan tiga langkah dasar untuk mengamankan server dari akses tidak sah.',a:'Gunakan pembaruan keamanan, firewall dengan aturan terbatas, serta akun unik dengan hak akses minimum.',p:'Informasi ini langsung terlihat pada gambar (label 1-3) dan cerita (port 21 di firewall). Jawaban cukup menyebut ulang informasi.'},
+{q:'Mengapa waktu pengumpulan tugas turun dari pekan 1 ke pekan 5? Hubungkan skenario dengan prinsip keamanan server dan manajemen user.',a:'Contoh: file dikirim ke satu server pusat lewat LAN sehingga siswa tidak antre memakai flashdisk, akun dan folder pribadi mencegah file tertukar, dan siswa makin terbiasa memakai klien.',p:'Jawaban lain diterima jika memuat alasan dan bukti dari data (45 menit menjadi 8 menit) serta fungsi FTP (transfer terpusat, hak akses).'},
+{q:'Hitunglah penghematan waktu pekan 5 dibanding pekan 1 (dalam menit dan persen). Berapa waktu rata-rata per siswa di pekan 5?',a:'Penghematan = 45 - 8 = 37 menit. Persen = 37 : 45 x 100% = sekitar 82%. Rata-rata per siswa pekan 5 = 8 : 32 = 0,25 menit (15 detik).',p:'Langkah: cari selisih, bagi dengan waktu awal, lalu kalikan 100%. Waktu per siswa = total waktu : jumlah siswa.'},
+{q:'Kelas lain berisi 36 siswa dan waktu tersisa hanya 10 menit. Apakah server yang aman cukup? Putuskan berdasarkan data dan hitunganmu.',a:'Dengan 0,25 menit per siswa, 36 siswa butuh 36 x 0,25 = 9 menit, jadi cukup tetapi hanya tersisa 1 menit; akun dan folder sebaiknya disiapkan lebih dulu. Dengan cara flashdisk pekan 1 (45 : 32 = sekitar 1,41 menit per siswa), 36 siswa butuh sekitar 51 menit sehingga tidak cukup.',p:'Keputusan boleh berbeda (misalnya tetap menyiapkan cadangan) selama memakai angka 9 menit dan batas 10 menit sebagai bukti.'}];
+const STORY='Di SMK Nusa Cendekia (nama fiktif), Pak Rudi mengajar Administrasi Infrastruktur Jaringan di kelas XI yang berisi 32 siswa. Setiap selesai praktik, siswa mengumpulkan laporan dan file konfigurasi. Awalnya mereka bergantian memakai flashdisk, sehingga pengumpulan memakan 45 menit dan beberapa file rusak. Pak Rudi lalu meminta siswa memasang FileZilla Server di komputer lab. Siswa membuat akun, menentukan folder tujuan, dan mengatur hak akses agar setiap siswa hanya bisa mengunggah ke folder miliknya. Beberapa siswa sempat gagal terhubung karena lupa membuka port 21 di firewall; mereka mencari penyebabnya sendiri, saling bertanya, dan mencatat langkah perbaikannya. Dalam lima pekan, mereka terbiasa memakai klien dan pengumpulan hanya butuh 8 menit. Selain lebih cepat, guru dapat memeriksa semua file di satu tempat dan tidak ada tugas yang hilang.';
+function pjg(n){pj=n;render();scrollTo(0,0)}
+function pjb(i){if(!(pa[i]||'').trim()){pb[i]=-1}else pb[i]=1;render()}
+function pojok(){const T=['Amati','Baca','Pahami Data','Jawab','Refleksi'];let b='';
+ if(pj===0)b=`<div class="card"><h3 style="margin-top:0">1. Amati Gambarnya</h3>
+ <svg viewBox="0 0 640 250" style="width:100%;height:auto" role="img" aria-label="Diagram komputer siswa terhubung ke server yang aman lewat jaringan LAN">
+ <defs><marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8z" style="fill:var(--pri)"/></marker></defs>
+ <style>.b{fill:var(--soft);stroke:var(--pri);stroke-width:2}.t{fill:var(--tx);font:600 14px system-ui}.s{fill:var(--mut);font:12px system-ui}.n{fill:var(--pri)}.nt{fill:#fff;font:700 13px system-ui}</style>
+ <rect class="b" x="15" y="85" width="150" height="80" rx="10"/><text class="t" x="90" y="120" text-anchor="middle">Komputer Siswa</text><text class="s" x="90" y="140" text-anchor="middle">(klien)</text>
+ <rect class="b" x="245" y="100" width="150" height="50" rx="10"/><text class="t" x="320" y="130" text-anchor="middle">Jaringan LAN</text>
+ <rect class="b" x="470" y="30" width="155" height="190" rx="10"/><text class="t" x="547" y="55" text-anchor="middle">server yang aman</text>
+ <text class="s" x="547" y="85" text-anchor="middle">Folder: siswa01</text><text class="s" x="547" y="105" text-anchor="middle">Folder: siswa02</text><text class="s" x="547" y="125" text-anchor="middle">Folder: ...</text><text class="s" x="547" y="145" text-anchor="middle">Folder: siswa32</text><text class="s" x="547" y="195" text-anchor="middle">Login + hak akses</text>
+ <line x1="165" y1="125" x2="243" y2="125" stroke-width="3" style="stroke:var(--pri)" marker-end="url(#ar)"/><line x1="395" y1="125" x2="468" y2="125" stroke-width="3" style="stroke:var(--pri)" marker-end="url(#ar)"/>
+ <text class="s" x="430" y="112" text-anchor="middle">Port 21</text>
+ <circle class="n" cx="90" cy="70" r="13"/><text class="nt" x="90" y="75" text-anchor="middle">1</text><circle class="n" cx="320" cy="85" r="13"/><text class="nt" x="320" y="90" text-anchor="middle">2</text><circle class="n" cx="547" cy="14" r="13"/><text class="nt" x="547" y="19" text-anchor="middle">3</text></svg>
+ <p><b>Gambar 1.</b> Alur pengumpulan tugas lewat FTP di lab jaringan. Penanda: 1 = perangkat siswa, 2 = jalur jaringan, 3 = server penyimpan file.</p>
+ <p class="mut">Ilustrasi diagram, bukan foto kejadian sebenarnya.</p>
+ <div class="card" style="background:var(--soft);border:0"><b>Pertanyaan pengamatan</b><ol><li>Apa yang kamu lihat pada gambar?</li><li>Bagaimana hubungan gambar ini dengan materi yang kita pelajari?</li></ol></div></div>`;
+ if(pj===1)b=`<div class="card"><h3 style="margin-top:0">2. Baca Kisahnya: Dari Flashdisk ke server yang aman</h3><div class="rd">${esc(STORY)}</div><p class="mut">Kisah ini adalah skenario fiktif untuk pembelajaran (tokoh, sekolah, dan angka tidak nyata).</p></div>
+ <div class="card" style="background:var(--soft);border:0"><b>Hubungannya dengan Pelajaran Kita</b><ul><li><b>server yang aman</b> menyimpan file di satu tempat sehingga mudah diperiksa.</li><li><b>klien</b> (misalnya FileZilla Client) terhubung dengan host, username, password, dan port 21.</li><li><b>Konfigurasi user dan hak akses</b> menjaga setiap siswa hanya mengunggah ke foldernya.</li><li><b>Firewall</b> perlu mengizinkan port FTP agar koneksi berhasil.</li></ul></div>
+ <div class="card mut">Sumber konsep: <a href="https://www.rfc-editor.org/rfc/rfc959" target="_blank" rel="noopener">RFC 959 – File Transfer Protocol (IETF)</a>; <a href="https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml" target="_blank" rel="noopener">IANA – Service Name and Transport Protocol Port Number Registry</a>.</div>`;
+ if(pj===2)b=`<div class="card"><h3 style="margin-top:0">3. Pahami Datanya</h3><b>Waktu mengumpulkan 32 tugas per pekan (menit)</b>
+ <div class="sc"><table><tr><th>Pekan</th><th>Metode</th><th>Waktu (menit)</th></tr>${PD.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td><b>${r[2]}</b></td></tr>`).join('')}</table></div>
+ <p><b>Grafik batang</b> (skala 0–50 menit; angka tertulis di setiap batang)</p>
+ ${PD.map(r=>`<div style="display:flex;align-items:center;gap:8px;margin:6px 0"><span style="width:60px;font-size:13px">${r[0]}</span><div class="bar" style="flex:1;height:20px"><i style="width:${r[2]/50*100}%;background:${r[2]>20?'#64748b':'var(--pri)'}"></i></div><b style="width:70px;font-size:13px">${r[2]} mnt</b></div>`).join('')}
+ <p class="mut">Data simulasi untuk pembelajaran. Batang abu-abu = cara lama (di atas 20 menit), batang biru = FTP; label tetap tertulis pada setiap baris.</p></div>`;
+ if(pj===3)b=`<div class="card"><h3 style="margin-top:0">4. Ayo Temukan Makna</h3><p class="mut">Tulis jawabanmu dulu (atau di buku/diskusi), baru buka pembahasan.</p></div>`+PQ.map((x,i)=>`<div class="card"><b>${['Temukan informasi','Simpulkan hubungan','Hitung dan bandingkan','Ambil keputusan'][i]}</b><p>${i+1}. ${esc(x.q)}</p><textarea rows="3" placeholder="Tulis jawabanmu..." oninput="pa[${i}]=this.value">${esc(pa[i]||'')}</textarea>
+ <button class="btn s" onclick="pjb(${i})">Lihat Pembahasan</button>${pb[i]===-1?'<p class="mut">Coba jawab dulu ya, lalu buka pembahasan.</p>':''}${pb[i]===1?`<div class="card" style="background:var(--soft);border:0;margin-top:10px"><b>Contoh jawaban:</b> ${esc(x.a)}<br><br><b>Pembahasan:</b> ${esc(x.p)}</div>`:''}</div>`).join('');
+ if(pj===4)b=`<div class="card"><h3 style="margin-top:0">5. Inspirasi untukku</h3><p><b>Setelah membaca, mengamati, dan memahami data, keterampilan apa yang ingin kamu kuasai?</b></p><textarea rows="3" placeholder="Tulis refleksimu..."></textarea>
+ <div class="card" style="background:var(--soft);border:0"><b>Tantangan kecil</b><p>Rancang struktur folder FTP untuk satu kelas: tentukan nama folder, siapa yang boleh membaca, menulis, dan menghapus. Jelaskan alasannya, lalu diskusikan dengan temanmu.</p></div></div>`;
+ return `<div class="pojok-hero"><span class="pojok-chip">✦ RUANG EKSPLORASI DIGITAL</span><h1>POJOK DIGITAL</h1><p>Lihat Dunianya, Baca Kisahnya, Pahami Datanya! Jelajahi skenario nyata, amati data, pecahkan tantangan, dan bangun kebiasaan digital yang aman.</p><span class="pojok-chip">01 · Amati</span><span class="pojok-chip">02 · Pahami</span><span class="pojok-chip">03 · Praktikkan</span></div>
+ <div class="row" style="margin-bottom:12px;justify-content:flex-start">${T.map((t,i)=>`<span class="tag ${i===pj?'ok':''}" style="${i===pj?'font-weight:700':''}">${i+1}. ${t}</span>`).join('')}</div>${b}
+ <div class="row"><button class="btn o" ${pj?'':'disabled'} onclick="pjg(${pj-1})">‹ Kembali</button><button class="btn o" onclick="go('dash')">Menu Utama</button><button class="btn" ${pj<4?'':'disabled'} onclick="pjg(${pj+1})">Lanjut ›</button></div>`}
+function dmurid(){if(me.role!=='guru')return '';const us=G('users').filter(u=>u.role==='murid'),h=G('hasil'),pr=G('progress'),n=G('materi').length;
+ return `<h2>Data Murid (${us.length} siswa)</h2><p class="mut">Akun siswa menggunakan <b>username nama depan</b> dan <b>password sesuai nomor absen (01–36)</b>. Tombol Reset PW mengembalikan password ke nomor absen siswa.</p><div class="card"><b>Tambah Murid</b><div class="grid" style="margin:8px 0 0"><div><input id="mn" placeholder="Nama lengkap"></div><div><input id="mu" placeholder="Username"></div><div><input id="mp" placeholder="Password" value="123"></div></div><button class="btn" onclick="addM()">+ Tambah</button> <button class="btn o" onclick="expM()">⬇ Ekspor Excel</button><p id="mm" class="mut"></p></div>
+ <div class="card sc"><table><tr><th>No</th><th>Nama</th><th>Username</th><th>Password / Absen</th><th>Materi</th><th>Pengerjaan</th><th>Nilai Terakhir</th><th></th></tr>${us.map((u,i)=>{const hh=h.filter(x=>x.user_id===u.id);return `<tr><td>${i+1}</td><td>${esc(u.nama)}</td><td>${esc(u.username)}</td><td>${esc(u.password)}</td><td>${pr.filter(p=>p.user_id===u.id).length}/${n}</td><td>${hh.length}</td><td><b>${hh.length?hh[hh.length-1].nilai:'-'}</b></td><td><button class="btn o s" onclick="rpw(${u.id})">Reset PW</button> <button class="btn r s" onclick="delM(${u.id})">Hapus</button></td></tr>`}).join('')||'<tr><td>Belum ada murid</td></tr>'}</table></div>`}
+function addM(){const n=$('mn').value.trim(),u=($('mu').value.trim()||firstUsername(n)),p=$('mp').value||absenPassword(n,G('users').filter(x=>x.role==='murid').length+1),us=G('users');
+ if(!n||!u){$('mm').textContent='Nama dan username wajib diisi';return}
+ if(us.some(x=>x.username===u)){$('mm').textContent='Username sudah dipakai';return}
+ us.push({id:us.reduce((a,b)=>Math.max(a,b.id),0)+1,nama:n,role:'murid',username:u,password:p});S('users',us);render()}
+function delM(id){S('users',G('users').filter(u=>u.id!==id));S('hasil',G('hasil').filter(x=>x.user_id!==id));S('progress',G('progress').filter(x=>x.user_id!==id));render()}
+function rpw(id){const us=G('users');const u=us.find(u=>u.id===id);if(!u)return;u.password=absenPassword(u.nama,us.filter(x=>x.role==='murid').findIndex(x=>x.id===id)+1);S('users',us);alert('Password direset ke nomor absen: '+u.password)}
+function expM(){const h=G('hasil'),pr=G('progress'),rows=G('users').filter(u=>u.role==='murid').map(u=>{const hh=h.filter(x=>x.user_id===u.id);return{Nama:u.nama,Username:u.username,'Materi Selesai':pr.filter(p=>p.user_id===u.id).length,Pengerjaan:hh.length,'Nilai Terakhir':hh.length?hh[hh.length-1].nilai:''}});
+ const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'Murid');XLSX.writeFile(wb,'data-murid.xlsx')}
+function db(){const T={users:'id, nama, role, username, password',materi:'id, judul, deskripsi, isi',soal:'id, pertanyaan, a, b, c, d, kunci, sumber',hasil:'id, user_id, nilai, benar, total, tanggal',progress:'user_id, materi_id'};
+ return `<h2>Database (Tabel)</h2>`+Object.keys(T).map(t=>`<div class="card"><div class="row"><b>${t}</b><span class="tag">${G(t).length} baris</span></div><p class="mut">${T[t]}</p></div>`).join('')}
+</script></body></html>
